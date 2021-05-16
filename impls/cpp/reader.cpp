@@ -35,9 +35,42 @@ Value *read_form(Reader &reader) {
         return read_quoted_value(reader);
     case '^':
         return read_with_meta(reader);
+    case '-':
+        if (reader.peek().value().length() == 1)
+            return read_atom(reader);
+        return read_integer(reader);
+    case '0':
+    case '1':
+    case '2':
+    case '3':
+    case '4':
+    case '5':
+    case '6':
+    case '7':
+    case '8':
+    case '9':
+        return read_integer(reader);
     default:
         return read_atom(reader);
     }
+}
+
+Value *read_integer(Reader &reader) {
+    auto token = reader.next();
+    long num = 0;
+    bool negative = false;
+    for (char c : *token) {
+        if (c == '-') {
+            negative = true;
+        } else {
+            num *= 10;
+            int digit = c - 48;
+            num += digit;
+        }
+    }
+    if (negative)
+        num *= -1;
+    return new IntegerValue { num };
 }
 
 Value *read_quoted_value(Reader &reader) {

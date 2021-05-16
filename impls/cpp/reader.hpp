@@ -73,33 +73,47 @@ public:
                 }
                 return view.substr(start, m_index - start);
             }
-            default: {
+            case '-':
+            case '1':
+            case '2':
+            case '3':
+            case '4':
+            case '5':
+            case '6':
+            case '7':
+            case '8':
+            case '9': {
                 size_t start = m_index;
                 bool done = false;
+                ++m_index;
                 while (!done && m_index < m_input.length()) {
                     c = m_input.at(m_index);
                     switch (c) {
-                    case ' ':
-                    case '\t':
-                    case '\n':
-                    case '[':
-                    case ']':
-                    case '{':
-                    case '}':
-                    case '(':
-                    case ')':
-                    case '\'':
-                    case '"':
-                    case '`':
-                    case ',':
-                    case ';':
-                        done = true;
+                    case '0':
+                    case '1':
+                    case '2':
+                    case '3':
+                    case '4':
+                    case '5':
+                    case '6':
+                    case '7':
+                    case '8':
+                    case '9':
+                        ++m_index;
                         break;
                     default:
-                        ++m_index;
+                        done = true;
+                        break;
                     }
                 }
+                if (m_index - start == 1 && view.at(start) == '-') {
+                    --m_index;
+                    return tokenize_symbol();
+                }
                 return view.substr(start, m_index - start);
+            }
+            default: {
+                return tokenize_symbol();
             }
             }
         }
@@ -107,6 +121,37 @@ public:
     }
 
 private:
+    std::string_view tokenize_symbol() {
+        auto view = std::string_view(m_input);
+        size_t start = m_index;
+        bool done = false;
+        char c;
+        while (!done && m_index < m_input.length()) {
+            c = m_input.at(m_index);
+            switch (c) {
+            case ' ':
+            case '\t':
+            case '\n':
+            case '[':
+            case ']':
+            case '{':
+            case '}':
+            case '(':
+            case ')':
+            case '\'':
+            case '"':
+            case '`':
+            case ',':
+            case ';':
+                done = true;
+                break;
+            default:
+                ++m_index;
+            }
+        }
+        return view.substr(start, m_index - start);
+    }
+
     std::string &m_input;
     size_t m_index { 0 };
 };
@@ -138,6 +183,8 @@ std::vector<std::string_view> tokenize(std::string &input);
 Value *read_str(std::string &input);
 
 Value *read_form(Reader &reader);
+
+Value *read_integer(Reader &reader);
 
 Value *read_quoted_value(Reader &reader);
 
