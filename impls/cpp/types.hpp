@@ -26,8 +26,10 @@ public:
         Vector,
     };
 
-    virtual Type type() { assert(0); }
-    virtual std::string inspect() { assert(0); }
+    virtual Type type() const = 0;
+    virtual std::string inspect() const = 0;
+
+    virtual bool is_symbol() const { return false; }
 
     ListValue *as_list();
     VectorValue *as_vector();
@@ -46,8 +48,8 @@ public:
         m_list.push_back(value);
     }
 
-    virtual Type type() { return Type::List; }
-    virtual std::string inspect();
+    virtual Type type() const override { return Type::List; }
+    virtual std::string inspect() const override;
 
     auto begin() { return m_list.begin(); }
     auto end() { return m_list.end(); }
@@ -64,18 +66,18 @@ class VectorValue : public ListValue {
 public:
     VectorValue() { }
 
-    virtual Type type() { return Type::Vector; }
-    virtual std::string inspect();
+    virtual Type type() const override { return Type::Vector; }
+    virtual std::string inspect() const override;
 };
 
 struct HashMapHash {
-    std::size_t operator()(Value *key) const noexcept {
+    std::size_t operator()(const Value *key) const noexcept {
         return std::hash<std::string> {}(key->inspect());
     }
 };
 
 struct HashMapPred {
-    bool operator()(Value *lhs, Value *rhs) const {
+    bool operator()(const Value *lhs, const Value *rhs) const {
         return lhs->inspect() == rhs->inspect(); // FIXME
     }
 };
@@ -84,8 +86,8 @@ class HashMapValue : public Value {
 public:
     HashMapValue() { }
 
-    virtual Type type() { return Type::HashMap; }
-    virtual std::string inspect();
+    virtual Type type() const override { return Type::HashMap; }
+    virtual std::string inspect() const override;
 
     void set(Value *key, Value *val) {
         m_map[key] = val;
@@ -110,13 +112,17 @@ public:
     SymbolValue(std::string_view str)
         : m_str { str } { }
 
-    std::string str() { return m_str; }
+    std::string str() const { return m_str; }
 
-    virtual Type type() { return Type::Symbol; }
+    bool matches(const char *str) const { return m_str == str; }
 
-    virtual std::string inspect() {
+    virtual Type type() const override { return Type::Symbol; }
+
+    virtual std::string inspect() const override {
         return str();
     }
+
+    virtual bool is_symbol() const override { return true; }
 
 private:
     std::string m_str;
@@ -127,9 +133,9 @@ public:
     IntegerValue(long l)
         : m_long { l } { }
 
-    virtual Type type() { return Type::Integer; }
+    virtual Type type() const override { return Type::Integer; }
 
-    virtual std::string inspect() {
+    virtual std::string inspect() const override {
         return std::to_string(m_long);
     }
 
@@ -146,9 +152,9 @@ public:
     FnValue(FnPtr fn)
         : m_fn { fn } { }
 
-    virtual Type type() { return Type::Fn; }
+    virtual Type type() const override { return Type::Fn; }
 
-    virtual std::string inspect() {
+    virtual std::string inspect() const override {
         return "<fn>";
     }
 
@@ -163,9 +169,9 @@ public:
     ExceptionValue(std::string message)
         : m_message { message } { }
 
-    virtual Type type() { return Type::Exception; }
+    virtual Type type() const override { return Type::Exception; }
 
-    virtual std::string inspect() {
+    virtual std::string inspect() const override {
         return "<exception" + m_message + ">";
     }
 

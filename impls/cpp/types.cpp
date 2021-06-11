@@ -1,7 +1,7 @@
 #include "types.hpp"
 
 ListValue *Value::as_list() {
-    assert(type() == Type::List);
+    assert(type() == Type::List || type() == Type::Vector);
     return static_cast<ListValue *>(this);
 }
 
@@ -35,7 +35,7 @@ ExceptionValue *Value::as_exception() {
     return static_cast<ExceptionValue *>(this);
 }
 
-std::string ListValue::inspect() {
+std::string ListValue::inspect() const {
     std::string out = "(";
     for (auto *value : m_list) {
         out.append(value->inspect());
@@ -49,7 +49,7 @@ std::string ListValue::inspect() {
     return out;
 }
 
-std::string VectorValue::inspect() {
+std::string VectorValue::inspect() const {
     std::string out = "[";
     for (auto *value : m_list) {
         out.append(value->inspect());
@@ -63,7 +63,7 @@ std::string VectorValue::inspect() {
     return out;
 }
 
-std::string HashMapValue::inspect() {
+std::string HashMapValue::inspect() const {
     std::string out = "{";
     for (auto pair : m_map) {
         out.append(pair.first->inspect());
