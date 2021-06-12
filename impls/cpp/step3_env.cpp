@@ -80,7 +80,7 @@ Value *eval_ast(Value *ast, Env &env) {
     }
 }
 
-std::string PRINT(Value *input) { return pr_str(input); }
+std::string PRINT(Value *input) { return pr_str(input, true); }
 
 std::string rep(std::string input, Env &env) {
     try {
@@ -129,7 +129,7 @@ Value *mul(size_t argc, Value **args) {
     return new IntegerValue { result };
 }
 
-Value *div(size_t argc, Value **args) {
+Value *divide(size_t argc, Value **args) {
     assert(argc == 2);
     auto a = args[0];
     auto b = args[1];
@@ -149,7 +149,7 @@ int main() {
     env->set(new SymbolValue("+"), new FnValue { add });
     env->set(new SymbolValue("-"), new FnValue { sub });
     env->set(new SymbolValue("*"), new FnValue { mul });
-    env->set(new SymbolValue("/"), new FnValue { div });
+    env->set(new SymbolValue("/"), new FnValue { divide });
 
     std::string input;
     for (;;) {

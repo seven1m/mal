@@ -11,12 +11,17 @@ Value *READ(std::string input) {
 
 Value *EVAL(Value *input) { return input; }
 
-std::string PRINT(Value *input) { return pr_str(input); }
+std::string PRINT(Value *input) { return pr_str(input, true); }
 
 std::string rep(std::string input) {
-    auto ast = READ(input);
-    auto result = EVAL(ast);
-    return PRINT(result);
+    try {
+        auto ast = READ(input);
+        auto result = EVAL(ast);
+        return PRINT(result);
+    } catch (ExceptionValue *exception) {
+        std::cerr << exception->message() << std::endl;
+        return "";
+    }
 }
 
 int main() {
