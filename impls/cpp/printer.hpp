@@ -4,4 +4,4 @@
 
 #include "types.hpp"
 
-std::string pr_str(Value *value);
+std::string pr_str(Value *value, bool print_readably = false);

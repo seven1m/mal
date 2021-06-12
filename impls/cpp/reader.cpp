@@ -16,12 +16,14 @@ Value *read_str(std::string &input) {
 }
 
 Value *read_form(Reader &reader) {
-    auto token = reader.peek();
+    auto maybe_token = reader.peek();
 
-    if (!token)
+    if (!maybe_token)
         return nullptr;
 
-    switch (token.value()[0]) {
+    auto token = maybe_token.value();
+
+    switch (token[0]) {
     case '(':
         return read_list(reader);
     case '[':
@@ -36,7 +38,7 @@ Value *read_form(Reader &reader) {
     case '^':
         return read_with_meta(reader);
     case '-':
-        if (reader.peek().value().length() == 1)
+        if (token.length() == 1 || !isdigit(token[1]))
             return read_atom(reader);
         return read_integer(reader);
     case '0':
@@ -51,8 +53,60 @@ Value *read_form(Reader &reader) {
     case '9':
         return read_integer(reader);
     default:
+        assert(token.size() >= 1);
+        if (token == "true") {
+            reader.next();
+            return TrueValue::the();
+        } else if (token == "false") {
+            reader.next();
+            return FalseValue::the();
+        } else if (token == "nil") {
+            reader.next();
+            return NilValue::the();
+        } else if (token[0] == '"') {
+            return read_string(reader);
+        } else if (token[0] == ':') {
+            reader.next();
+            return new KeywordValue { token };
+        }
         return read_atom(reader);
     }
+}
+
+Value *read_string(Reader &reader) {
+    auto token = reader.next().value();
+    if (token.size() < 2)
+        throw new ExceptionValue { "end of input" };
+    assert(token.size() >= 2);
+    if (token.size() == 2)
+        return new StringValue { "" };
+    auto str = token.substr(1, token.size() - 2);
+    std::string processed = "";
+    for (size_t i = 0; i < str.size(); ++i) {
+        auto c = str[i];
+        switch (c) {
+        case '"':
+            processed += '\\';
+            processed += c;
+            break;
+        case '\\': {
+            if (++i >= str.size())
+                throw new ExceptionValue { "unbalanced quotes" };
+            c = str[i];
+            switch (c) {
+            case 'n':
+                processed += "\n";
+                break;
+            default:
+                processed += c;
+            }
+            break;
+        }
+        default:
+            processed += c;
+        }
+    }
+    return new StringValue { processed };
 }
 
 Value *read_integer(Reader &reader) {
